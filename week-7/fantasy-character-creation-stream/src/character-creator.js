@@ -1,17 +1,31 @@
-const { Duplex } = require('stream');
+const { Duplex } = require("stream");
 
 class CharacterCreator extends Duplex {
-  constructor(options) {
+  constructor(options = {}) {
     super(options);
-    // TODO: Initialize your class here
+    this.data = "";
   }
 
   _write(chunk, encoding, callback) {
-    // TODO: Implement your _write method here
+    const input = chunk.toString().trim();
+    if (!input) {
+      this.emit("error", new Error("Input cannot be empty"));
+      return callback();
+    }
+
+    this.data += input;
+    const parts = input.split(",");
+    if (parts.length === 3) {
+      const [charClass, gender, funFact] = parts;
+      const output = `A ${gender} ${charClass} who ${funFact.trim()}.\n`;
+      this.push(output);
+    }
+
+    callback();
   }
 
   _read(size) {
-    // TODO: Implement your _read method here
+    // No-op since push is called in _write
   }
 }
 
