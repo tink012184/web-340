@@ -1,50 +1,56 @@
 const http = require("http");
 const url = require("url");
-let character = null;
 
-// TODO: Implement your server here
+let storedCharacter = null;
 
 const server = http.createServer((req, res) => {
-  // TODO: Implement your routes here
   const parsedUrl = url.parse(req.url, true);
-  const { pathname, query } = parsedUrl;
 
-  if (req.method === "POST" && pathname === "/create-character") {
-    const { class: charClass, gender, fact } = query;
+  if (req.method === "POST" && parsedUrl.pathname === "/create-character") {
+    const { class: charClass, gender, funFact } = parsedUrl.query;
 
-    if (!charClass || !gender || !fact) {
-      res.writeHead(400);
-      res.end("Missing required parameters");
-      return;
+    if (!charClass || !gender || !funFact) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ message: "Missing character data" }));
     }
 
-    character = { class: charClass, gender, fact };
+    storedCharacter = { class: charClass, gender, funFact };
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Character created!", character }));
-  } else if (req.method === "POST" && pathname === "/confirm-character") {
-    if (!character) {
-      res.writeHead(400);
-      res.end("No character to confirm");
-      return;
-    }
-    res.writeHead(200);
-    res.end("Character confirmed!");
-  } else if (req.method === "GET" && pathname === "/view-character") {
-    if (!character) {
-      res.writeHead(404);
-      res.end("No character found");
-      return;
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(character));
-  } else {
-    res.writeHead(404);
-    res.end("Route not found");
+    return res.end(
+      JSON.stringify({
+        message: "Character created",
+        character: storedCharacter,
+      })
+    );
   }
-});
 
-server.listen(3000, () => {
-  console.log("Server listening on port 3000");
+  if (req.method === "POST" && parsedUrl.pathname === "/confirm-character") {
+    if (!storedCharacter) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ message: "No character to confirm" }));
+    }
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ message: "Character confirmed" }));
+  }
+
+  if (req.method === "GET" && parsedUrl.pathname === "/view-character") {
+    if (!storedCharacter) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ message: "Character not found" }));
+    }
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify(storedCharacter));
+  }
+
+  // Default route
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ message: "Route not found" }));
 });
 
 module.exports = server;
+
+if (require.main === module) {
+  server.listen(3000, () => console.log("Server running on port 3000"));
+}
