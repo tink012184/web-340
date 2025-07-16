@@ -28,19 +28,41 @@ function getCharacters(callback) {
 */
 
 // For promises:
-/*
-const fs = require('fs').promises;
+
+const fs = require("fs").promises;
+const path = require("path");
+
+const DATA_FILE = path.join(__dirname, "character-data.json");
 
 async function createCharacter(character) {
-  // TODO: Implement this function
+  try {
+    let characters = [];
+    try {
+      const data = await fs.readFile(DATA_FILE, "utf-8");
+      characters = JSON.parse(data);
+    } catch (readErr) {
+      // If file does not exist or is empty, ignore
+      if (readErr.code !== "ENOENT") throw readErr;
+    }
+
+    characters.push(character);
+    await fs.writeFile(DATA_FILE, JSON.stringify(characters, null, 2));
+    return true;
+  } catch (err) {
+    throw new Error("Failed to write character data.");
+  }
 }
 
 async function getCharacters() {
-  // TODO: Implement this function
+  try {
+    const data = await fs.readFile(DATA_FILE, "utf-8");
+    return JSON.parse(data);
+  } catch (err) {
+    throw new Error("Failed to read character data.");
+  }
 }
-*/
 
 // Uncomment the appropriate exports depending on whether you're using callbacks or promises:
 
 // module.exports = { createCharacter, getCharacters }; // For callbacks
-// module.exports = { createCharacter, getCharacters }; // For promises
+module.exports = { createCharacter, getCharacters, DATA_FILE }; // For promises
